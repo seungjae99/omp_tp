@@ -1,0 +1,457 @@
+<?xml version="1.0"?>
+<sdf version="1.7">
+
+    <world name="tf_world">
+        <scene>
+            <ambient>0.0 1.0 1.0</ambient>
+            <background>0 0.7 0.8</background>
+        </scene>
+
+        <light type="directional" name="sun">
+            <cast_shadows>true</cast_shadows>
+            <pose>0 0 10 0 0 0</pose>
+            <diffuse>1 1 1 1</diffuse>
+            <specular>0.5 0.5 0.5 1</specular>
+            <attenuation>
+                <range>1000</range>
+                <constant>0.9</constant>
+                <linear>0.01</linear>
+                <quadratic>0.001</quadratic>
+            </attenuation>
+            <direction>-0.5 0.1 -0.9</direction>
+        </light>
+
+        <physics name="1ms" type="ode">
+            <max_step_size>0.001</max_step_size>
+            <real_time_factor>1.0</real_time_factor>
+        </physics>
+        <plugin filename="ignition-gazebo-physics-system" name="ignition::gazebo::systems::Physics">
+        </plugin>
+        <plugin filename="ignition-gazebo-user-commands-system" name="ignition::gazebo::systems::UserCommands">
+        </plugin>
+        <plugin filename="ignition-gazebo-scene-broadcaster-system" name="ignition::gazebo::systems::SceneBroadcaster">
+        </plugin>
+        <plugin filename="ignition-gazebo-buoyancy-system" name="ignition::gazebo::systems::Buoyancy">
+            <!-- <uniform_fluid_density>1000</uniform_fluid_density> -->
+            <graded_buoyancy>
+                <default_density>1000</default_density>
+                <density_change>
+                    <above_depth>0</above_depth>
+                    <density>1</density>
+                </density_change>
+            </graded_buoyancy>
+        </plugin>
+        <!-- 센서 플러그인 -->
+        <!-- <plugin filename="libignition-gazebo6-sensors-system.so" name="ignition::gazebo::systems::Sensors">
+        </plugin> -->
+        <plugin filename="ignition-gazebo-sensors-system" name="ignition::gazebo::systems::Sensors">
+        </plugin>
+
+
+        <model name="water_plane">
+            <static>true</static>
+            <link name="link">
+                <visual name="water_plane">
+                    <geometry>
+                        <plane>
+                            <size>100 100</size>
+                            <normal>0 0 1</normal>
+                        </plane>
+                    </geometry>
+                    <material>
+                        <ambient>0 0 1 0.7</ambient>
+                        <diffuse>0 0 1 0.7</diffuse>
+                        <specular>0 0 1 0.7</specular>
+                    </material>
+                </visual>
+            </link>
+        </model>
+
+        <model name="my_boat">
+            <!-- 바닥면 -->
+            <link name="base_link">
+                <visual name="link_bottom">
+                    <geometry>
+                        <box>
+                            <size>1.0 0.5 0.02</size>
+                        </box>
+                    </geometry>
+                    <pose>0 0 0 0 0 0</pose>
+                    <!-- 중심을 기준으로 위로 두께 절반만큼 올림 -->
+                    <material>
+                        <ambient>1 1 0 1</ambient>
+                        <diffuse>1 1 0 1</diffuse>
+                        <specular>1 1 0 1</specular>
+                    </material>
+                </visual>
+                <collision name="link_bottom">
+                    <geometry>
+                        <box>
+                            <size>1.0 0.5 0.02</size>
+                        </box>
+                    </geometry>
+                    <pose>0 0 0.01 0 0 0</pose>
+                </collision>
+                <inertial>
+                    <mass>5</mass>
+                    <!-- inertia : calculated by "omni calculator(web page), cuboid?"-->
+                    <inertia>
+                        <ixx>0.10433</ixx>
+                        <ixy>0</ixy>
+                        <ixz>0</ixz>
+                        <iyy>0.4168</iyy>
+                        <iyz>0</iyz>
+                        <izz>0.5208</izz>
+                    </inertia>
+                </inertial>
+            </link>
+
+            <!-- 왼쪽 벽 -->
+            <link name="link_left_wall">
+                <visual name="link_left_wall">
+                    <geometry>
+                        <box>
+                            <size>1.0 0.02 0.3</size>
+                        </box>
+                    </geometry>
+                    <pose>0 0.24 0.15 0 0 0</pose>
+                    <material>
+                        <ambient>1 1 0 1</ambient>
+                        <diffuse>1 1 0 1</diffuse>
+                        <specular>1 1 0 1</specular>
+                    </material>
+                </visual>
+                <collision name="link_left_wall">
+                    <geometry>
+                        <box>
+                            <size>1.0 0.02 0.3</size>
+                        </box>
+                    </geometry>
+                    <pose>0 0.24 0.15 0 0 0</pose>
+                </collision>
+                <inertial>
+                    <mass>3</mass>
+                    <!-- inertia : calculated by "omni calculator(web page), cuboid?"-->
+                    <inertia>
+                        <ixx>0.0226</ixx>
+                        <ixy>0</ixy>
+                        <ixz>0</ixz>
+                        <iyy>0.2725</iyy>
+                        <iyz>0</iyz>
+                        <izz>0.2501</izz>
+                    </inertia>
+                </inertial>
+            </link>
+
+            <!-- 오른쪽 벽 -->
+            <link name="link_right_wall">
+                <visual name="link_right_wall">
+                    <geometry>
+                        <box>
+                            <size>1.0 0.02 0.3</size>
+                        </box>
+                    </geometry>
+                    <pose>0 -0.24 0.15 0 0 0</pose>
+                    <material>
+                        <ambient>1 1 0 1</ambient>
+                        <diffuse>1 1 0 1</diffuse>
+                        <specular>1 1 0 1</specular>
+                    </material>
+                </visual>
+                <collision name="link_right_wall">
+                    <geometry>
+                        <box>
+                            <size>1.0 0.02 0.3</size>
+                        </box>
+                    </geometry>
+                    <pose>0 -0.24 0.15 0 0 0</pose>
+                </collision>
+                <inertial>
+                    <mass>3</mass>
+                    <!-- inertia : calculated by "omni calculator(web page), cuboid?"-->
+                    <inertia>
+                        <ixx>0.0226</ixx>
+                        <ixy>0</ixy>
+                        <ixz>0</ixz>
+                        <iyy>0.2725</iyy>
+                        <iyz>0</iyz>
+                        <izz>0.2501</izz>
+                    </inertia>
+                </inertial>
+            </link>
+
+            <!-- 앞쪽 벽 -->
+            <link name="link_front_wall">
+                <visual name="link_front_wall">
+                    <geometry>
+                        <box>
+                            <size>0.02 0.5 0.3</size>
+                        </box>
+                    </geometry>
+                    <pose>0.49 0 0.15 0 0 0</pose>
+                    <material>
+                        <ambient>1 1 0 1</ambient>
+                        <diffuse>1 1 0 1</diffuse>
+                        <specular>1 1 0 1</specular>
+                    </material>
+                </visual>
+                <collision name="link_front_wall">
+                    <geometry>
+                        <box>
+                            <size>0.02 0.5 0.3</size>
+                        </box>
+                    </geometry>
+                    <pose>0.49 0 0.15 0 0 0</pose>
+                </collision>
+                <inertial>
+                    <mass>2</mass>
+                    <!-- inertia : calculated by "omni calculator(web page), cuboid?"-->
+                    <inertia>
+                        <ixx>0.05667</ixx>
+                        <ixy>0</ixy>
+                        <ixz>0</ixz>
+                        <iyy>0.015067</iyy>
+                        <iyz>0</iyz>
+                        <izz>0.04173</izz>
+                    </inertia>
+                </inertial>
+            </link>
+
+            <!-- 뒤쪽 벽 -->
+            <link name="link_back_wall">
+                <visual name="link_back_wall">
+                    <geometry>
+                        <box>
+                            <size>0.02 0.5 0.3</size>
+                        </box>
+                    </geometry>
+                    <pose>-0.49 0 0.15 0 0 0</pose>
+                    <material>
+                        <ambient>1 1 0 1</ambient>
+                        <diffuse>1 1 0 1</diffuse>
+                        <specular>1 1 0 1</specular>
+                    </material>
+                </visual>
+                <collision name="link_back_wall">
+                    <geometry>
+                        <box>
+                            <size>0.02 0.5 0.3</size>
+                        </box>
+                    </geometry>
+                    <pose>-0.49 0 0.15 0 0 0</pose>
+                </collision>
+                <inertial>
+                    <mass>2</mass>
+                    <!-- inertia : calculated by "omni calculator(web page), cuboid?"-->
+                    <inertia>
+                        <ixx>0.05667</ixx>
+                        <ixy>0</ixy>
+                        <ixz>0</ixz>
+                        <iyy>0.015067</iyy>
+                        <iyz>0</iyz>
+                        <izz>0.04173</izz>
+                    </inertia>
+                </inertial>
+            </link>
+
+            <!-- 고정 조인트로 연결 -->
+            <joint name="left_joint" type="fixed">
+                <parent>base_link</parent>
+                <child>link_left_wall</child>
+            </joint>
+
+            <joint name="right_joint" type="fixed">
+                <parent>base_link</parent>
+                <child>link_right_wall</child>
+            </joint>
+
+            <joint name="front_joint" type="fixed">
+                <parent>base_link</parent>
+                <child>link_front_wall</child>
+            </joint>
+
+            <joint name="back_joint" type="fixed">
+                <parent>base_link</parent>
+                <child>link_back_wall</child>
+            </joint>
+
+            <!-- Camera 정의 -->
+            <joint name="joint_camera" type="fixed">
+                <pose>0 0 0 0 0 0</pose>
+                <parent>base_link</parent>
+                <child>camera_link</child>
+            </joint>
+
+            <link name="camera_link">
+                <pose>0.52 0 0.25 0 0 0</pose>
+                <sensor type="camera" name="my_sensor">
+                    <pose>0 0 0 0 0 0</pose>
+                    <camera>
+                        <horizontal_fov>1.0</horizontal_fov>
+                        <image>
+                            <width>320</width>
+                            <height>240</height>
+                        </image>
+                        <clip>
+                            <near>0.1</near>
+                            <far>100</far>
+                        </clip>
+                    </camera>
+                    <topic>image</topic>
+                    <always_on>1</always_on>
+                    <update_rate>30</update_rate>
+                    <visualize>true</visualize>
+                </sensor>
+            </link>
+
+            <!-- Thruster 정의 -->
+            <joint name="joint_propeller1" type="revolute">
+                <pose>0 0 0 0 0 0</pose>
+                <parent>base_link</parent>
+                <child>thruster1</child>
+                <axis>
+                    <xyz>0 0 1</xyz>
+                </axis>
+            </joint>
+
+            <link name="thruster1">
+                <pose>-0.52 0.17 0.05 0 1.57 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <box>
+                            <size>0.1 0.07 0.05</size>
+                        </box>
+                    </geometry>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <box>
+                            <size>0.1 0.07 0.05</size>
+                        </box>
+                    </geometry>
+                    <material>
+                        <ambient>0.5 0.5 0.5 1</ambient>
+                        <diffuse>0.5 0.5 0.5 1</diffuse>
+                        <specular>0.5 0.5 0.5 1</specular>
+                    </material>
+                </visual>
+                <inertial>
+                    <mass>0.525</mass>
+                    <inertia>
+                        <ixx>0.00032375</ixx>
+                        <ixy>0</ixy>
+                        <ixz>0</ixz>
+                        <iyy>0.0005469</iyy>
+                        <iyz>0</iyz>
+                        <izz>0.0006519</izz>
+                    </inertia>
+                </inertial>
+            </link>
+
+            <joint name="joint_propeller2" type="revolute">
+                <pose>0 0 0 0 0 0</pose>
+                <parent>base_link</parent>
+                <child>thruster2</child>
+                <axis>
+                    <xyz>0 0 1</xyz>
+                </axis>
+            </joint>
+
+            <link name="thruster2">
+                <pose>-0.52 -0.17 0.05 0 1.57 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <box>
+                            <size>0.1 0.07 0.05</size>
+                        </box>
+                    </geometry>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <box>
+                            <size>0.1 0.07 0.05</size>
+                        </box>
+                    </geometry>
+                    <material>
+                        <ambient>0.5 0.5 0.5 1</ambient>
+                        <diffuse>0.5 0.5 0.5 1</diffuse>
+                        <specular>0.5 0.5 0.5 1</specular>
+                    </material>
+                </visual>
+                <inertial>
+                    <mass>0.525</mass>
+                    <inertia>
+                        <ixx>0.00032375</ixx>
+                        <ixy>0</ixy>
+                        <ixz>0</ixz>
+                        <iyy>0.0005469</iyy>
+                        <iyz>0</iyz>
+                        <izz>0.0006519</izz>
+                    </inertia>
+                </inertial>
+            </link>
+
+            <!-- Hydrodynamics plugin -->
+            <plugin filename="ignition-gazebo-hydrodynamics-system" name="ignition::gazebo::systems::Hydrodynamics">
+                <link_name>base_link</link_name>
+                <xDotU>-0.04876161</xDotU>
+                <yDotV>-1.26324739</yDotV>
+                <zDotW>-1.26324739</zDotW>
+                <kDotP>0</kDotP>
+                <mDotQ>-0.3346</mDotQ>
+                <nDotR>-0.3346</nDotR>
+                <xUabsU>-0.62282</xUabsU>
+                <xU>-5</xU>
+                <yVabsV>-60.127</yVabsV>
+                <yV>-5</yV>
+                <zWabsW>-6.0127</zWabsW>
+                <zW>-100</zW>
+                <kPabsP>-0.001916</kPabsP>
+                <kP>-1</kP>
+                <mQabsQ>-6.32698957</mQabsQ>
+                <mQ>-1</mQ>
+                <nRabsR>-6.32698957</nRabsR>
+                <nR>-1</nR>
+            </plugin>
+            <!-- Thruster plugin -->
+            <plugin filename="ignition-gazebo-thruster-system" name="ignition::gazebo::systems::Thruster">
+                <joint_name>joint_propeller1</joint_name>
+                <namespace>my_boat</namespace>
+                <topic>thrust1</topic>
+                <thrust_coefficient>0.001</thrust_coefficient>
+                <fluid_density>1000</fluid_density>
+                <propeller_diameter>0.4</propeller_diameter>
+            </plugin>
+            <plugin filename="ignition-gazebo-thruster-system" name="ignition::gazebo::systems::Thruster">
+                <joint_name>joint_propeller2</joint_name>
+                <namespace>my_boat</namespace>
+                <topic>thrust2</topic>
+                <thrust_coefficient>0.001</thrust_coefficient>
+                <fluid_density>1000</fluid_density>
+                <propeller_diameter>0.4</propeller_diameter>
+            </plugin>
+        </model>
+
+        <!-- Obstacle -->
+        <model name="obstacle">
+            <static>true</static>
+            <pose>5 0 0 0 0 0</pose>
+            <link name="base_link">
+                <visual name="obstacle">
+                    <geometry>
+                        <sphere>
+                            <radius>0.5</radius>
+                        </sphere>
+                    </geometry>
+                    <material>
+                        <ambient>1 0 0 1</ambient>
+                        <diffuse>1 0 0 1</diffuse>
+                        <specular>1 0 0 1</specular>
+                    </material>
+                </visual>
+            </link>
+        </model>
+
+    </world>
+
+</sdf>
