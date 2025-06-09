@@ -37,7 +37,6 @@ ign gazebo tp_world.sdf
 
 # Run ROS-Gazebo bridge
 ros2 run ros_gz_bridge parameter_bridge /image@sensor_msgs/msg/Image@ignition.msgs.Image \
-/my_boat/thrust1@std_msgs/msg/Float64@ignition.msgs.Double \
-/my_boat/thrust2@std_msgs/msg/Float64@ignition.msgs.Double
+  /my_boat/thrust1@std_msgs/msg/Float64@ignition.msgs.Double \
+  /my_boat/thrust2@std_msgs/msg/Float64@ignition.msgs.Double
 ```
-
