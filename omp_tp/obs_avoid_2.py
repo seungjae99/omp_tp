@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# refactoring code(좀 더 깔끔하게 수정)
+# 1차 refactoring code(매우 기본적인 FSM 구조)
 
 import rclpy
 from rclpy.node import Node

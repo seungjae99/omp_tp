@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# my original code
+# original code(하드코딩 형식)
 
 import rclpy
 from rclpy.node import Node

@@ -24,8 +24,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "obs_avoidance=omp_tp.obs_avoidance:main",
+            "obs_avoid_1=omp_tp.obs_avoid_1:main",
             "obs_avoid_2=omp_tp.obs_avoid_2:main",
+            "obs_avoid_3=omp_tp.obs_avoid_3:main",
         ],
     },
 )

@@ -22,8 +22,8 @@ def generate_launch_description():
         ),
         Node(
             package='omp_tp',
-            executable='obs_avoid_2',
-            name='obs_avoid_2',
+            executable='obs_avoid_3',
+            name='obs_avoid_3',
             output='screen',
         ),
     ])
