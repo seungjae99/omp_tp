@@ -39,4 +39,7 @@ ign gazebo tp_world.sdf
 ros2 run ros_gz_bridge parameter_bridge /image@sensor_msgs/msg/Image@ignition.msgs.Image \
   /my_boat/thrust1@std_msgs/msg/Float64@ignition.msgs.Double \
   /my_boat/thrust2@std_msgs/msg/Float64@ignition.msgs.Double
+
+# Launch the obstacle avoidance node + rviz2(camera image)
+ros2 launch omp_tp omp_tp.launch.py
 ```
