@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# refactoring code(좀 더 깔끔하게 수정)
+
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64
@@ -63,6 +65,7 @@ class ObstacleAvoidNode(Node):
         self.obstacle_detected = (count > self.PIXEL_THRESHOLD)
         # self.get_logger().debug(f"dark_pixels={count}, detected={self.obstacle_detected}")
         
+        # 흑백 이미지 퍼블리시
         gray_msg = self.bridge.cv2_to_imgmsg(gray, encoding='mono8')
         gray_msg.header = msg.header
         self.pub_gray_img.publish(gray_msg)
@@ -114,20 +117,21 @@ class ObstacleAvoidNode(Node):
             if elapsed >= self.DUR_LEFT2:
                 self._transition(State.NAVIGATING, "회피 완료 → 직진 재개")
 
-    # — 동작별 퍼블리시 메서드들 —
+    # 상태 퍼블리시
+    # 직진
     def _drive_forward(self):
         self._publish(self.FWD_SPEED, self.FWD_SPEED)
-
+    # 좌회전
     def _turn_left(self):
         self._publish(-self.TURN_SPEED, self.TURN_SPEED)
-
+    # 우회전
     def _turn_right(self):
         self._publish(self.TURN_SPEED, -self.TURN_SPEED)
-
+    # 속도 명령 publish
     def _publish(self, v1, v2):
         self.pub_th1.publish(Float64(data=v1))
         self.pub_th2.publish(Float64(data=v2))
-
+    # 상태 전환 메서드
     def _transition(self, next_state: State, log_msg: str):
         self.get_logger().info(log_msg)
         self.state = next_state
