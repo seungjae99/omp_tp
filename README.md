@@ -35,6 +35,8 @@ This repository contains a Gazebo simulation of a simple Unmanned Surface Vehicl
 # Launch the Gazebo simulation
 ign gazebo tp_world.sdf
 
+# play the gazebo simulation
+
 # Run ROS-Gazebo bridge
 ros2 run ros_gz_bridge parameter_bridge /image@sensor_msgs/msg/Image@ignition.msgs.Image \
   /my_boat/thrust1@std_msgs/msg/Float64@ignition.msgs.Double \
