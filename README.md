@@ -29,19 +29,24 @@ This repository contains a Gazebo simulation of a simple Unmanned Surface Vehicl
 - Detect obstacles using camera data
 - Avoid obstacles using differential thrust logic
 
+## Installation
+```bash
+mkdir -p ~/omp_tp/src
+cd /omp_tp/src
+git clone https://github.com/seungjae99/omp_tp.git
+cd .. && colcon build
+source install/setup.bash
+```
+
 ## Usage
 
 ```bash
 # Launch the Gazebo simulation
+# in tp_worlds directory(cd ~/omp_tp/src/omp_tp/tp_worlds)
 ign gazebo tp_world.sdf
 
 # play the gazebo simulation
 
-# Run ROS-Gazebo bridge
-ros2 run ros_gz_bridge parameter_bridge /image@sensor_msgs/msg/Image@ignition.msgs.Image \
-  /my_boat/thrust1@std_msgs/msg/Float64@ignition.msgs.Double \
-  /my_boat/thrust2@std_msgs/msg/Float64@ignition.msgs.Double
-
-# Launch the obstacle avoidance node + rviz2(camera image)
+# Launch the bridge node(gazebo <-> ROS2) + obstacle avoidance node + rviz2(camera image)
 ros2 launch omp_tp omp_tp.launch.py
 ```
