@@ -26,4 +26,15 @@ def generate_launch_description():
             name='obs_avoid_3',
             output='screen',
         ),
+        Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            name='gz_bridge',
+            arguments=[
+                '/image@sensor_msgs/msg/Image@ignition.msgs.Image',
+                '/my_boat/thrust1@std_msgs/msg/Float64@ignition.msgs.Double',
+                '/my_boat/thrust2@std_msgs/msg/Float64@ignition.msgs.Double',
+            ],
+            output='screen'
+        ),
     ])
