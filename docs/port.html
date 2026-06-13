@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>omp_tp USV Simulation — 기술 포트폴리오</title>
+<style>
+/* ── Color Tokens ─────────────────────────────────────── */
+:root {
+  --ink:       #1a1f2e;
+  --ink-2:     #3d4460;
+  --ink-3:     #6b7490;
+  --divider:   #dde2ee;
+  --bg:        #f7f8fc;
+  --bg-card:   #ffffff;
+  --bg-code:   #f0f2f8;
+  --accent:    #1a56db;
+  --accent-2:  #0e3fa3;
+  --accent-3:  #e8f0fe;
+  --orange:    #c45000;
+  --orange-bg: #fff4ec;
+  --green:     #166534;
+  --green-bg:  #f0faf4;
+  --purple:    #5b21b6;
+  --purple-bg: #f5f3ff;
+  --red:       #991b1b;
+  --red-bg:    #fef2f2;
+}
+
+/* ── Reset & Base ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR',
+               -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  line-height: 1.75;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+a { color: var(--accent); }
+
+/* ── Topbar ───────────────────────────────────────────── */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(247,248,252,0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--divider);
+  padding: 0 32px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 52px;
+}
+.topbar-logo {
+  font-size: 13px; font-weight: 700; letter-spacing: 0.04em;
+  color: var(--accent); text-decoration: none;
+}
+.topbar-nav { display: flex; gap: 24px; list-style: none; }
+.topbar-nav a {
+  font-size: 12.5px; color: var(--ink-3);
+  text-decoration: none; font-weight: 500;
+}
+.topbar-nav a:hover { color: var(--accent); }
+@media (max-width: 600px) { .topbar-nav { display: none; } }
+
+/* ── Page Wrapper ─────────────────────────────────────── */
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 24px 60px;
+}
+
+/* ── Hero ─────────────────────────────────────────────── */
+.hero {
+  padding: 52px 0 40px;
+  border-bottom: 1px solid var(--divider);
+  margin-bottom: 36px;
+}
+.hero-eyebrow {
+  font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--accent); margin-bottom: 12px;
+}
+.hero h1 {
+  font-size: 30px; font-weight: 800; color: var(--ink);
+  line-height: 1.2; margin-bottom: 16px;
+}
+.hero h1 span { color: var(--accent); }
+.hero-sub {
+  font-size: 15px; color: var(--ink-2); max-width: 680px; margin-bottom: 22px;
+}
+.badge-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.badge {
+  font-size: 11.5px; font-weight: 700; padding: 3px 10px;
+  border-radius: 4px; border: 1px solid; letter-spacing: 0.03em;
+}
+.b-ros  { color: var(--green);  background: var(--green-bg);  border-color: #86efac; }
+.b-cpp  { color: #1e40af;       background: var(--accent-3);  border-color: #93c5fd; }
+.b-gl   { color: var(--purple); background: var(--purple-bg); border-color: #c4b5fd; }
+.b-qt5  { color: var(--orange); background: var(--orange-bg); border-color: #fdba74; }
+.b-cv   { color: #0f766e;       background: #f0fdfa;          border-color: #5eead4; }
+.b-py   { color: #1d4ed8;       background: #eff6ff;          border-color: #93c5fd; }
+.b-gz   { color: #6b21a8;       background: #faf5ff;          border-color: #d8b4fe; }
+.b-fsm  { color: var(--orange); background: var(--orange-bg); border-color: #fdba74; }
+
+/* ── Metric Row ───────────────────────────────────────── */
+.metric-row {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 14px; margin-bottom: 44px;
+}
+.metric-card {
+  background: var(--bg-card); border: 1px solid var(--divider);
+  border-radius: 10px; padding: 20px 22px; border-top: 3px solid var(--accent);
+}
+.metric-num   { font-size: 28px; font-weight: 800; color: var(--accent); line-height: 1; margin-bottom: 4px; }
+.metric-label { font-size: 12px; color: var(--ink-3); font-weight: 500; letter-spacing: 0.02em; }
+.metric-desc  { font-size: 12.5px; color: var(--ink-2); margin-top: 6px; line-height: 1.5; }
+
+/* ── Section ──────────────────────────────────────────── */
+.section { margin-bottom: 44px; }
+.section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.section-num {
+  font-size: 11px; font-weight: 700; color: var(--accent);
+  background: var(--accent-3); padding: 2px 8px; border-radius: 4px;
+  letter-spacing: 0.06em; font-family: 'JetBrains Mono', monospace;
+}
+.section-title { font-size: 17px; font-weight: 700; color: var(--ink); }
+
+/* ── Card ─────────────────────────────────────────────── */
+.card {
+  background: var(--bg-card); border: 1px solid var(--divider);
+  border-radius: 10px; padding: 26px 28px; margin-bottom: 14px;
+}
+.card-title {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-3); margin-bottom: 14px;
+}
+
+/* ── Grid ─────────────────────────────────────────────── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+@media (max-width: 680px) {
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .metric-row { grid-template-columns: 1fr; }
+}
+
+/* ── Callout ──────────────────────────────────────────── */
+.callout {
+  border-left: 3px solid; border-radius: 0 6px 6px 0;
+  padding: 12px 16px; font-size: 13.5px; margin: 12px 0;
+}
+.callout-problem  { background: var(--red-bg);    border-color: #ef4444; color: #7f1d1d; }
+.callout-solution { background: var(--green-bg);  border-color: #22c55e; color: var(--green); }
+.callout-info     { background: var(--accent-3);  border-color: var(--accent); color: #1e3a8a; }
+.callout-warn     { background: var(--orange-bg); border-color: #f97316; color: var(--orange); }
+
+/* ── Flow Steps ───────────────────────────────────────── */
+.flow { display: flex; flex-direction: column; gap: 10px; }
+.flow-step { display: flex; align-items: flex-start; gap: 14px; }
+.flow-num {
+  flex-shrink: 0; width: 26px; height: 26px;
+  background: var(--accent); color: #fff;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; margin-top: 2px;
+}
+.flow-num.check {
+  background: var(--green); font-size: 13px;
+}
+.flow-body { font-size: 14px; color: var(--ink-2); }
+.flow-body strong { color: var(--ink); }
+
+/* ── Pipeline ─────────────────────────────────────────── */
+.pipeline {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 14px 0;
+}
+.pipe-step {
+  background: var(--bg-code); border: 1px solid var(--divider);
+  border-radius: 8px; padding: 10px 14px; text-align: center; min-width: 90px;
+}
+.plabel { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--ink-3); }
+.pval   { font-size: 12.5px; font-weight: 600; color: var(--ink); margin-top: 2px; }
+.pipe-arrow { font-size: 16px; color: var(--ink-3); font-weight: 700; }
+.pipe-note  { font-size: 12.5px; color: var(--ink-3); margin-top: 8px; }
+
+/* ── Table ────────────────────────────────────────────── */
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th {
+  background: var(--bg-code); color: var(--ink-3); font-size: 11.5px;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+  padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--divider);
+}
+td {
+  padding: 10px 14px; color: var(--ink-2);
+  border-bottom: 1px solid #eef0f6; vertical-align: top;
+}
+tr:last-child td { border-bottom: none; }
+
+/* ── Code Block ───────────────────────────────────────── */
+pre {
+  background: #1e2130;
+  border: 1px solid #2d3148;
+  border-radius: 8px;
+  padding: 18px 20px;
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: #c9d1e0;
+  overflow-x: auto;
+  margin: 10px 0;
+}
+.kw   { color: #ff7b72; }
+.fn   { color: #d2a8ff; }
+.str  { color: #a5d6ff; }
+.cmt  { color: #6b7890; font-style: italic; }
+.num  { color: #79c0ff; }
+.type { color: #ffa657; }
+
+/* ── Inline Code ──────────────────────────────────────── */
+code {
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  font-size: 12.5px;
+  background: var(--bg-code);
+  border: 1px solid var(--divider);
+  border-radius: 3px;
+  padding: 1px 5px;
+  color: #9a3412;
+}
+pre code {
+  background: none; border: none; padding: 0;
+  color: inherit; font-size: inherit;
+}
+
+/* ── Result Image ─────────────────────────────────────── */
+.result-wrap { margin: 14px 0; }
+.result-img  { width: 100%; border-radius: 8px; border: 1px solid var(--divider); }
+.result-caption { font-size: 12.5px; color: var(--ink-3); margin-top: 6px; }
+
+/* ── Stack Item ───────────────────────────────────────── */
+.stack-item {
+  background: var(--bg-card); border: 1px solid var(--divider);
+  border-radius: 10px; padding: 18px 20px;
+}
+.stack-name { font-size: 13.5px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+.stack-role { font-size: 12.5px; color: var(--ink-3); line-height: 1.5; }
+
+/* ── FSM Diagram ──────────────────────────────────────── */
+.fsm-wrap {
+  display: flex; align-items: center; justify-content: center;
+  gap: 20px; flex-wrap: wrap; padding: 20px 0;
+}
+.fsm-state {
+  background: var(--bg-code); border: 2px solid var(--divider);
+  border-radius: 50%; width: 110px; height: 110px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px; text-align: center;
+  color: var(--ink);
+}
+.fsm-state.active {
+  border-color: var(--accent); background: var(--accent-3); color: var(--accent);
+}
+.fsm-arrow { font-size: 22px; color: var(--ink-3); font-weight: 700; }
+.fsm-label { font-size: 11px; color: var(--ink-3); margin-top: 4px; }
+
+/* ── Sequence Table ───────────────────────────────────── */
+.seq-step {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid #eef0f6;
+  font-size: 13.5px;
+}
+.seq-step:last-child { border-bottom: none; }
+.seq-num {
+  flex-shrink: 0; width: 24px; height: 24px;
+  background: var(--accent-3); color: var(--accent);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+}
+.seq-action { font-weight: 700; min-width: 60px; color: var(--ink); }
+.seq-dur    { color: var(--ink-3); font-family: 'JetBrains Mono', monospace; font-size: 12.5px; min-width: 50px; }
+.seq-desc   { color: var(--ink-2); }
+.dir-left   { color: #7c3aed; }
+.dir-right  { color: var(--orange); }
+.dir-fwd    { color: var(--green); }
+
+/* ── Footer ───────────────────────────────────────────── */
+.footer {
+  padding-top: 28px;
+  border-top: 1px solid var(--divider);
+  font-size: 12px; color: var(--ink-3);
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 8px;
+}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a class="topbar-logo" href="#">CHOI SEUNGJAE · PORTFOLIO</a>
+  <ul class="topbar-nav">
+    <li><a href="#background">개발 배경</a></li>
+    <li><a href="#architecture">시스템 구조</a></li>
+    <li><a href="#implementation">구현 상세</a></li>
+    <li><a href="#result">검증 결과</a></li>
+    <li><a href="#stack">기술 스택</a></li>
+  </ul>
+</nav>
+
+<div class="page">
+
+  <!-- ── Hero ── -->
+  <header class="hero">
+    <div class="hero-eyebrow">Robotics · ROS 2 · Ignition Gazebo · 2024</div>
+    <h1>USV 자율 장애물 회피 <span>시뮬레이션</span></h1>
+    <p class="hero-sub">
+      ROS 2 Humble과 Ignition Gazebo Fortress 환경에서 무인 수상정(USV)의 카메라 기반 장애물 감지 및
+      차동 추진 제어를 구현한 시뮬레이션 패키지입니다.
+      이진화 영상 처리로 장애물을 감지하고, 7단계 고정 회피 시퀀스를 적용하는 FSM 구조로 자율 항법을 달성했습니다.
+    </p>
+    <div class="badge-row">
+      <span class="badge b-ros">ROS 2 Humble</span>
+      <span class="badge b-gz">Ignition Gazebo</span>
+      <span class="badge b-py">Python</span>
+      <span class="badge b-cv">OpenCV</span>
+      <span class="badge b-fsm">FSM</span>
+      <span class="badge b-ros">ros_gz_bridge</span>
+    </div>
+  </header>
+
+  <!-- ── Metric Row ── -->
+  <div class="metric-row">
+    <div class="metric-card">
+      <div class="metric-num">2</div>
+      <div class="metric-label">FSM State Count</div>
+      <div class="metric-desc">초기 8-State 구조를 2-State(NAVIGATING / AVOIDING)로 리팩토링하여 제어 로직 단순화</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-num">7</div>
+      <div class="metric-label">Avoidance Sequence Steps</div>
+      <div class="metric-desc">좌회전→직진→우회전→직진→우회전→직진→좌회전의 대칭 S-curve 회피 경로</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-num">10 Hz</div>
+      <div class="metric-label">Control Loop Rate</div>
+      <div class="metric-desc">0.1 s 주기 타이머 기반 제어 루프 / 카메라 콜백과 독립적으로 동작</div>
+    </div>
+  </div>
+
+  <!-- ── 01 개발 배경 ── -->
+  <section class="section" id="background">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <span class="section-title">개발 배경 및 문제 정의</span>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Project Context</div>
+      <p style="color:var(--ink-2); font-size:14px;">
+        자율운항시스템공학과 전공 심화 과제로, 실제 USV 플랫폼 없이 Gazebo 시뮬레이터에서
+        자율 장애물 회피 알고리즘을 설계·검증하는 것이 목표입니다.
+        실선 실험 없이 시뮬레이션 환경에서 ROS 2 기반의 인식-판단-제어 파이프라인 전 과정을 직접 구현합니다.
+      </p>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Problem Definition</div>
+        <div class="callout callout-problem">
+          <strong>문제 1:</strong> 실선 실험 없이 자율 항법 알고리즘을 반복 검증할 환경이 필요
+        </div>
+        <div class="callout callout-problem">
+          <strong>문제 2:</strong> 카메라 단일 센서만으로 장애물 유무를 신뢰성 있게 판단해야 함
+        </div>
+        <div class="callout callout-problem">
+          <strong>문제 3:</strong> 충돌 없이 원래 경로로 복귀하는 회피 경로 설계 필요
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Approach</div>
+        <div class="flow">
+          <div class="flow-step">
+            <div class="flow-num">1</div>
+            <div class="flow-body"><strong>Ignition Gazebo 환경 구성:</strong> SDF로 USV 모델, 물리 플러그인, 정적 장애물 배치</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">2</div>
+            <div class="flow-body"><strong>영상 기반 감지:</strong> 그레이스케일 이진화 후 어두운 픽셀 수로 장애물 판정</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">3</div>
+            <div class="flow-body"><strong>FSM 회피 제어:</strong> 타임 기반 시퀀스로 차동 추진 명령 생성</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num check">✓</div>
+            <div class="flow-body"><strong>반복 리팩토링:</strong> obs_avoid_1→2→3 순으로 코드 구조 개선</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 02 시스템 구조 ── -->
+  <section class="section" id="architecture">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <span class="section-title">시스템 구조 및 데이터 흐름</span>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Data Flow Pipeline</div>
+      <div class="pipeline">
+        <div class="pipe-step" style="border-color:var(--green); background:var(--green-bg);">
+          <div class="plabel" style="color:var(--green);">Gazebo</div>
+          <div class="pval">USV Model</div>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">
+          <div class="plabel">Camera Plugin</div>
+          <div class="pval">/image</div>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step" style="border-color:var(--accent); background:var(--accent-3);">
+          <div class="plabel" style="color:var(--accent);">ros_gz_bridge</div>
+          <div class="pval">Ignition↔ROS 2</div>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">
+          <div class="plabel">obs_avoid_3</div>
+          <div class="pval">Node</div>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step" style="border-color:var(--orange); background:var(--orange-bg);">
+          <div class="plabel" style="color:var(--orange);">Thruster</div>
+          <div class="pval">thrust1, 2</div>
+        </div>
+      </div>
+      <p class="pipe-note">카메라 이미지를 ros_gz_bridge가 중계하여 ROS 2 토픽으로 변환 → 노드가 처리 후 제어 명령을 Gazebo Thruster 플러그인으로 역방향 전달</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Topic Interface</div>
+      <table>
+        <thead>
+          <tr><th>방향</th><th>토픽</th><th>타입</th><th>역할</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Gazebo → ROS 2</td>
+            <td><code>/image</code></td>
+            <td><code>sensor_msgs/Image</code></td>
+            <td>카메라 원본 이미지 수신</td>
+          </tr>
+          <tr>
+            <td>ROS 2 → Gazebo</td>
+            <td><code>/my_boat/thrust1</code></td>
+            <td><code>std_msgs/Float64</code></td>
+            <td>좌측 thruster 출력 명령</td>
+          </tr>
+          <tr>
+            <td>ROS 2 → Gazebo</td>
+            <td><code>/my_boat/thrust2</code></td>
+            <td><code>std_msgs/Float64</code></td>
+            <td>우측 thruster 출력 명령</td>
+          </tr>
+          <tr>
+            <td>ROS 2 → RViz2</td>
+            <td><code>/gray_image</code></td>
+            <td><code>sensor_msgs/Image</code></td>
+            <td>이진화 처리 이미지 디버그 출력</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Launch Architecture</div>
+      <p style="font-size:14px; color:var(--ink-2); margin-bottom:14px;">
+        <code>omp_tp.launch.py</code> 가 아래 3개 노드를 단일 명령으로 기동합니다.
+      </p>
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-num">1</div>
+          <div class="flow-body"><strong>rviz2</strong> — <code>omp_tp_rviz2.rviz</code> 설정 로드, /gray_image 모니터링</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">2</div>
+          <div class="flow-body"><strong>obs_avoid_3</strong> (package: omp_tp) — 인식·판단·제어 통합 노드</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">3</div>
+          <div class="flow-body"><strong>gz_bridge</strong> (parameter_bridge) — 4개 토픽 양방향 브릿지</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 03 핵심 구현 ── -->
+  <section class="section" id="implementation">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <span class="section-title">핵심 구현 상세</span>
+    </div>
+
+    <!-- 장애물 감지 -->
+    <div class="card">
+      <div class="card-title">Obstacle Detection — 카메라 이진화 감지</div>
+      <p style="font-size:14px; color:var(--ink-2); margin-bottom:14px;">
+        깊이 센서 없이 카메라 단일 센서로 장애물을 판정합니다.
+        장애물(어두운 물체)이 화면에 등장하면 어두운 픽셀 수가 임계치를 초과하는 원리를 이용합니다.
+      </p>
+      <pre><code><span class="kw">def</span> <span class="fn">_on_image</span>(<span class="type">self</span>, msg: <span class="type">Image</span>):
+    cv_img = <span class="type">self</span>.bridge.<span class="fn">imgmsg_to_cv2</span>(msg, desired_encoding=<span class="str">'bgr8'</span>)
+    gray   = cv2.<span class="fn">cvtColor</span>(cv_img, cv2.COLOR_BGR2GRAY)
+
+    <span class="cmt"># dark pixel extraction: threshold=50, inverted binary</span>
+    _, bw  = cv2.<span class="fn">threshold</span>(gray, <span class="num">50</span>, <span class="num">255</span>, cv2.THRESH_BINARY_INV)
+    count  = cv2.<span class="fn">countNonZero</span>(bw)
+
+    <span class="type">self</span>.obstacle = (count > <span class="num">10_000</span>)   <span class="cmt"># pixel threshold</span>
+
+    <span class="cmt"># publish grayscale for rviz2 debug</span>
+    gray_msg = <span class="type">self</span>.bridge.<span class="fn">cv2_to_imgmsg</span>(gray, encoding=<span class="str">'mono8'</span>)
+    gray_msg.header = msg.header
+    <span class="type">self</span>.pub_gray.<span class="fn">publish</span>(gray_msg)</code></pre>
+      <div class="callout callout-info">
+        <strong>설계 의도:</strong> 그레이스케일 임계치 50은 시뮬레이션 환경 조명 기준으로 설정.
+        픽셀 임계치 10,000은 노이즈 오감지를 줄이기 위해 obs_avoid_1의 8,000에서 상향 조정.
+      </div>
+    </div>
+
+    <!-- FSM -->
+    <div class="card">
+      <div class="card-title">FSM State Machine — 2-State + Sequence</div>
+      <div class="fsm-wrap">
+        <div class="fsm-state active">
+          NAVIGATING
+          <div class="fsm-label">직진 순항</div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+          <div style="font-size:11px; color:var(--ink-3);">장애물 감지</div>
+          <div class="fsm-arrow">⇄</div>
+          <div style="font-size:11px; color:var(--ink-3);">시퀀스 완료</div>
+        </div>
+        <div class="fsm-state">
+          AVOIDING
+          <div class="fsm-label">7단계 실행</div>
+        </div>
+      </div>
+      <div class="callout callout-info">
+        <strong>설계 의도:</strong> obs_avoid_1의 8개 State Enum(AVOID_LEFT1, AVOID_FWD1 …)을
+        시퀀스 리스트 + 인덱스 방식으로 대체하여 상태를 NAVIGATING / AVOIDING 2개로 압축.
+        새로운 회피 동작 추가 시 <code>avoid_sequence</code> 리스트만 수정하면 됨.
+      </div>
+    </div>
+
+    <!-- 회피 시퀀스 -->
+    <div class="card">
+      <div class="card-title">Avoidance Sequence — 7-Step S-Curve Path</div>
+      <p style="font-size:13.5px; color:var(--ink-2); margin-bottom:14px;">
+        좌회전으로 이탈 → 장애물 측면 통과 → 우회전으로 복귀하는 대칭 구조.
+        각 스텝은 타이머 경과(<code>elapsed ≥ duration</code>)로 자동 전환됩니다.
+      </p>
+      <div class="seq-step">
+        <div class="seq-num">1</div>
+        <div class="seq-action dir-left">좌회전</div>
+        <div class="seq-dur">3.0 s</div>
+        <div class="seq-desc">(-1.5, +1.5) — 원래 항로에서 좌측으로 이탈 시작</div>
+      </div>
+      <div class="seq-step">
+        <div class="seq-num">2</div>
+        <div class="seq-action dir-fwd">직진</div>
+        <div class="seq-dur">7.0 s</div>
+        <div class="seq-desc">(+0.8, +0.8) — 장애물 측면을 통과</div>
+      </div>
+      <div class="seq-step">
+        <div class="seq-num">3</div>
+        <div class="seq-action dir-right">우회전</div>
+        <div class="seq-dur">3.0 s</div>
+        <div class="seq-desc">(+1.5, -1.5) — 원래 방향으로 선수 복귀</div>
+      </div>
+      <div class="seq-step">
+        <div class="seq-num">4</div>
+        <div class="seq-action dir-fwd">직진</div>
+        <div class="seq-dur">4.0 s</div>
+        <div class="seq-desc">(+0.8, +0.8) — 원래 항로 선상 복귀</div>
+      </div>
+      <div class="seq-step">
+        <div class="seq-num">5</div>
+        <div class="seq-action dir-right">우회전</div>
+        <div class="seq-dur">3.0 s</div>
+        <div class="seq-desc">(+1.5, -1.5) — 복귀 방향 조정</div>
+      </div>
+      <div class="seq-step">
+        <div class="seq-num">6</div>
+        <div class="seq-action dir-fwd">직진</div>
+        <div class="seq-dur">7.0 s</div>
+        <div class="seq-desc">(+0.8, +0.8) — 원래 항로 방향으로 전진</div>
+      </div>
+      <div class="seq-step">
+        <div class="seq-num">7</div>
+        <div class="seq-action dir-left">좌회전</div>
+        <div class="seq-dur">3.0 s</div>
+        <div class="seq-desc">(-1.5, +1.5) — 최종 선수 방향 정렬 후 NAVIGATING 복귀</div>
+      </div>
+    </div>
+
+    <!-- 제어 루프 -->
+    <div class="card">
+      <div class="card-title">Control Loop — Timer-based Execution</div>
+      <pre><code><span class="kw">def</span> <span class="fn">_control_loop</span>(<span class="type">self</span>):
+    now     = <span class="type">self</span>.get_clock().<span class="fn">now</span>()
+    elapsed = (now - <span class="type">self</span>.state_start).nanoseconds / <span class="num">1e9</span>
+
+    <span class="kw">if</span> <span class="type">self</span>.state == State.NAVIGATING:
+        <span class="kw">if</span> <span class="type">self</span>.obstacle:
+            <span class="type">self</span>.state       = State.AVOIDING
+            <span class="type">self</span>.avoid_step  = <span class="num">0</span>
+            <span class="type">self</span>.state_start = now
+        <span class="kw">else</span>:
+            <span class="type">self</span>.<span class="fn">_drive</span>(<span class="type">self</span>.FWD_SPEED, <span class="type">self</span>.FWD_SPEED)
+
+    <span class="kw">else</span>:  <span class="cmt"># AVOIDING</span>
+        action, duration = <span class="type">self</span>.avoid_sequence[<span class="type">self</span>.avoid_step]
+        <span class="kw">if</span>   action == <span class="str">"forward"</span>: <span class="type">self</span>.<span class="fn">_drive</span>( <span class="type">self</span>.FWD_SPEED,  <span class="type">self</span>.FWD_SPEED)
+        <span class="kw">elif</span> action == <span class="str">"left"</span>:    <span class="type">self</span>.<span class="fn">_drive</span>(-<span class="type">self</span>.TURN_SPEED, <span class="type">self</span>.TURN_SPEED)
+        <span class="kw">elif</span> action == <span class="str">"right"</span>:   <span class="type">self</span>.<span class="fn">_drive</span>( <span class="type">self</span>.TURN_SPEED, -<span class="type">self</span>.TURN_SPEED)
+
+        <span class="kw">if</span> elapsed >= duration:
+            <span class="type">self</span>.avoid_step += <span class="num">1</span>
+            <span class="type">self</span>.state_start  = now
+            <span class="kw">if</span> <span class="type">self</span>.avoid_step >= <span class="fn">len</span>(<span class="type">self</span>.avoid_sequence):
+                <span class="type">self</span>.state = State.NAVIGATING</code></pre>
+      <div class="callout callout-info">
+        <strong>참고:</strong> <code>elapsed</code> 계산은 nanosecond 단위로 수행 후 초 단위로 환산.
+        <code>state_start</code>를 스텝 전환 시마다 갱신하여 각 단계 타이머가 독립적으로 동작합니다.
+      </div>
+    </div>
+
+    <!-- 노드 리팩토링 이력 -->
+    <div class="card">
+      <div class="card-title">Node Refactoring History</div>
+      <table>
+        <thead>
+          <tr><th>버전</th><th>파일</th><th>State 수</th><th>구조 특징</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>v1</td>
+            <td><code>obs_avoid_1.py</code></td>
+            <td>8</td>
+            <td>AVOID_LEFT1~AVOID_LEFT2 하드코딩, 조건 분기 나열</td>
+          </tr>
+          <tr>
+            <td>v2</td>
+            <td><code>obs_avoid_2.py</code></td>
+            <td>중간</td>
+            <td>1차 리팩토링, 일부 상수 추출</td>
+          </tr>
+          <tr>
+            <td><strong>v3 (현재)</strong></td>
+            <td><code>obs_avoid_3.py</code></td>
+            <td><strong>2</strong></td>
+            <td>시퀀스 리스트 + 인덱스, 로그 중복 방지, /gray_image 퍼블리시 추가</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── 04 검증 결과 ── -->
+  <section class="section" id="result">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <span class="section-title">검증 결과</span>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Detection Validation</div>
+        <div class="flow">
+          <div class="flow-step">
+            <div class="flow-num check">✓</div>
+            <div class="flow-body">장애물 없는 환경에서 <code>count &lt; 10,000</code> 유지 — 오감지 없음</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num check">✓</div>
+            <div class="flow-body">장애물 근접 시 count 급증 → AVOIDING 전환 즉시 확인</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num check">✓</div>
+            <div class="flow-body"><code>/gray_image</code> RViz2 시각화로 감지 상태 실시간 확인</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Avoidance Validation</div>
+        <div class="flow">
+          <div class="flow-step">
+            <div class="flow-num check">✓</div>
+            <div class="flow-body">7단계 시퀀스 타이머 전환 정상 동작 — logger로 각 스텝 진입 확인</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num check">✓</div>
+            <div class="flow-body">AVOIDING 완료 후 NAVIGATING 자동 복귀 및 직진 재개 확인</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num check">✓</div>
+            <div class="flow-body">Gazebo 시뮬레이션 내 USV가 정적 장애물과 충돌 없이 우회</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Known Limitations</div>
+      <div class="callout callout-warn">
+        <strong>한계 1:</strong> 카메라 단일 센서 의존 — 조명 변화나 장애물 색상에 따라 감지 임계치 재조정 필요
+      </div>
+      <div class="callout callout-warn">
+        <strong>한계 2:</strong> 고정 시간 기반 시퀀스 — 장애물 크기·거리에 무관하게 동일한 경로 실행 (피드백 없음)
+      </div>
+      <div class="callout callout-warn">
+        <strong>한계 3:</strong> 회피 중 새로운 장애물 감지 시 현재 시퀀스 완료 후 재감지 — 복합 장애물 환경 미지원
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 05 기술 스택 ── -->
+  <section class="section" id="stack">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <span class="section-title">기술 스택 및 환경</span>
+    </div>
+
+    <div class="grid-3">
+      <div class="stack-item">
+        <div class="stack-name">ROS 2 Humble</div>
+        <div class="stack-role">미들웨어 — 노드 생성, 토픽 발행/구독, 타이머 관리</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-name">Ignition Gazebo Fortress</div>
+        <div class="stack-role">물리 시뮬레이터 — Buoyancy, Hydrodynamics, Thruster 플러그인</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-name">ros_gz_bridge</div>
+        <div class="stack-role">ROS 2 ↔ Ignition 토픽 양방향 변환 브릿지</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-name">Python 3 / rclpy</div>
+        <div class="stack-role">노드 구현 언어 — ament_python 빌드 타입</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-name">OpenCV / cv_bridge</div>
+        <div class="stack-role">영상 처리 — 그레이스케일 변환, 이진화, 픽셀 카운팅</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-name">RViz2</div>
+        <div class="stack-role">시각화 — /gray_image 실시간 모니터링, rviz config 포함</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <div class="card-title">Build & Run</div>
+      <pre><code><span class="cmt"># 패키지 빌드</span>
+<span class="fn">colcon</span> build <span class="kw">--packages-select</span> omp_tp
+<span class="fn">source</span> install/setup.bash
+
+<span class="cmt"># Gazebo 월드 실행 (tp_worlds/ 디렉토리에서)</span>
+<span class="fn">ign</span> gazebo tp_world.sdf
+
+<span class="cmt"># ROS 2 노드 + 브릿지 + RViz2 일괄 기동</span>
+<span class="fn">ros2</span> launch omp_tp omp_tp.launch.py</code></pre>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer class="footer">
+    <div><strong>최승재 (Choi Seungjae)</strong> · 자율운항시스템공학과 · 충남대학교</div>
+    <div>omp_tp USV Simulation · 개인 프로젝트 · 2024</div>
+  </footer>
+
+</div>
+</body>
+</html>
