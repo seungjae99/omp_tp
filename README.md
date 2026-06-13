@@ -1,5 +1,7 @@
 # USV Simulation in Gazebo with ROS 2
 
+**Project Page:** [seungjae99.github.io/omp_tp](https://seungjae99.github.io/omp_tp/)
+
 This repository contains a Gazebo simulation of a simple Unmanned Surface Vehicle (USV) integrated with ROS 2 Humble. The simulation supports thrust control, sensor integration, and basic autonomous navigation.
 
 ## Features

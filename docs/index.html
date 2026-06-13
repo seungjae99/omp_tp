@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="USV simulation in Ignition Gazebo with ROS 2 camera-based obstacle avoidance using an FSM" />
+  <title>omp_tp — USV Obstacle Avoidance Simulation</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0f1117;
+      color: #c9d1d9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      padding: 48px 16px 80px;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 48px;
+    }
+
+    header .label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #58a6ff;
+      margin-bottom: 10px;
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #e6edf3;
+      line-height: 1.2;
+      margin-bottom: 14px;
+    }
+
+    header p {
+      font-size: 1.05rem;
+      color: #8b949e;
+      max-width: 640px;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .tag {
+      background: #1e2130;
+      border: 1px solid #2d3148;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #8b949e;
+      padding: 3px 10px;
+      letter-spacing: 0.04em;
+    }
+
+    .card {
+      background: #1e2130;
+      border: 1px solid #2d3148;
+      border-radius: 8px;
+      padding: 28px 32px;
+      margin-bottom: 20px;
+    }
+
+    .card h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #e6edf3;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #2d3148;
+    }
+
+    .card p {
+      color: #8b949e;
+      margin-bottom: 12px;
+    }
+
+    .card p:last-child { margin-bottom: 0; }
+
+    .card ul {
+      list-style: none;
+      padding: 0;
+      color: #8b949e;
+    }
+
+    .card ul li {
+      padding: 5px 0;
+      padding-left: 16px;
+      position: relative;
+    }
+
+    .card ul li::before {
+      content: "-";
+      position: absolute;
+      left: 0;
+      color: #58a6ff;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    .arch-diagram {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 8px 0 0;
+    }
+
+    .arch-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .arch-box {
+      background: #0f1117;
+      border: 1px solid #2d3148;
+      border-radius: 6px;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #e6edf3;
+      white-space: nowrap;
+    }
+
+    .arch-box.accent {
+      border-color: #58a6ff;
+      color: #58a6ff;
+    }
+
+    .arch-arrow {
+      color: #444c6a;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .arch-label {
+      font-size: 11px;
+      color: #444c6a;
+      margin-left: 4px;
+    }
+
+    .fsm-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .fsm-table th {
+      text-align: left;
+      padding: 8px 12px;
+      color: #58a6ff;
+      font-weight: 600;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-bottom: 1px solid #2d3148;
+    }
+
+    .fsm-table td {
+      padding: 9px 12px;
+      color: #8b949e;
+      border-bottom: 1px solid #1a1e2e;
+      vertical-align: top;
+    }
+
+    .fsm-table tr:last-child td { border-bottom: none; }
+
+    .seq-step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px solid #1a1e2e;
+    }
+
+    .seq-step:last-child { border-bottom: none; }
+
+    .step-num {
+      background: #0f1117;
+      border: 1px solid #2d3148;
+      border-radius: 4px;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #58a6ff;
+      flex-shrink: 0;
+    }
+
+    .step-action {
+      font-size: 13px;
+      font-weight: 600;
+      color: #e6edf3;
+      width: 90px;
+      flex-shrink: 0;
+    }
+
+    .step-dur {
+      font-size: 12px;
+      color: #8b949e;
+    }
+
+    code {
+      background: #0f1117;
+      border: 1px solid #2d3148;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12px;
+      color: #79c0ff;
+    }
+
+    pre {
+      background: #0f1117;
+      border: 1px solid #2d3148;
+      border-radius: 6px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      margin-top: 12px;
+    }
+
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 13px;
+      color: #e6edf3;
+    }
+
+    .highlight { color: #79c0ff; }
+    .comment   { color: #444c6a; }
+
+    .version-badge {
+      display: inline-block;
+      background: #1a2a1a;
+      border: 1px solid #2d5a2d;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #56d364;
+      padding: 2px 8px;
+      margin-right: 8px;
+    }
+
+    .version-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #1a1e2e;
+    }
+
+    .version-row:last-child { border-bottom: none; }
+
+    .version-text {
+      font-size: 13px;
+      color: #8b949e;
+      padding-top: 1px;
+    }
+
+    .version-text strong {
+      color: #c9d1d9;
+      font-weight: 600;
+    }
+
+    .topic-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 0;
+    }
+
+    .topic-dir {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #58a6ff;
+      width: 32px;
+      flex-shrink: 0;
+      text-transform: uppercase;
+    }
+
+    .topic-name {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12px;
+      color: #79c0ff;
+      min-width: 200px;
+    }
+
+    .topic-type {
+      font-size: 12px;
+      color: #8b949e;
+    }
+
+    footer {
+      margin-top: 60px;
+      padding-top: 20px;
+      border-top: 1px solid #2d3148;
+      font-size: 12px;
+      color: #444c6a;
+    }
+
+    footer a {
+      color: #58a6ff;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="label">ROS 2 / Ignition Gazebo</div>
+    <h1>omp_tp</h1>
+    <p>Unmanned Surface Vehicle simulation in Ignition Gazebo with camera-based obstacle detection and a Finite State Machine avoidance controller, bridged to ROS 2 Humble.</p>
+    <div class="tag-row">
+      <span class="tag">ROS 2 Humble</span>
+      <span class="tag">Ignition Gazebo</span>
+      <span class="tag">Python</span>
+      <span class="tag">OpenCV</span>
+      <span class="tag">FSM</span>
+      <span class="tag">ament_python</span>
+    </div>
+  </header>
+
+  <!-- Overview -->
+  <div class="card">
+    <h2>Overview</h2>
+    <p>
+      omp_tp simulates a small Unmanned Surface Vehicle (USV) floating in a water environment. The boat is modeled with realistic buoyancy and hydrodynamics physics, controlled by two independent thrusters. A front-facing camera feeds a ROS 2 node that classifies whether an obstacle is present and drives a timed avoidance maneuver.
+    </p>
+    <p>
+      The project tracks the iterative development of the avoidance logic across three versions of the controller node, from a hardcoded state machine to a clean, data-driven design.
+    </p>
+  </div>
+
+  <!-- Architecture -->
+  <div class="card">
+    <h2>System Architecture</h2>
+    <div class="arch-diagram">
+      <div class="arch-row">
+        <div class="arch-box accent">Ignition Gazebo</div>
+        <div class="arch-arrow">--</div>
+        <div class="arch-box accent">ros_gz_bridge</div>
+        <div class="arch-arrow">--</div>
+        <div class="arch-box accent">ObstacleAvoidNode</div>
+      </div>
+    </div>
+    <p style="margin-top: 16px;">Three processes run in parallel from a single launch file:</p>
+    <ul>
+      <li><strong>Ignition Gazebo</strong> — physics simulation with buoyancy, hydrodynamics, thruster, and camera plugins active in the SDF world</li>
+      <li><strong>ros_gz_bridge (parameter_bridge)</strong> — translates Ignition transport topics to ROS 2 messages and back</li>
+      <li><strong>ObstacleAvoidNode</strong> — subscribes to the camera image, detects obstacles, and publishes thrust commands</li>
+      <li><strong>RViz2</strong> — displays the processed grayscale camera stream for monitoring</li>
+    </ul>
+  </div>
+
+  <!-- ROS Topics -->
+  <div class="card">
+    <h2>ROS 2 Topic Map</h2>
+    <div class="topic-row">
+      <span class="topic-dir">SUB</span>
+      <span class="topic-name">/image</span>
+      <span class="topic-type">sensor_msgs/msg/Image</span>
+    </div>
+    <div class="topic-row">
+      <span class="topic-dir">PUB</span>
+      <span class="topic-name">/my_boat/thrust1</span>
+      <span class="topic-type">std_msgs/msg/Float64 — left thruster</span>
+    </div>
+    <div class="topic-row">
+      <span class="topic-dir">PUB</span>
+      <span class="topic-name">/my_boat/thrust2</span>
+      <span class="topic-type">std_msgs/msg/Float64 — right thruster</span>
+    </div>
+    <div class="topic-row">
+      <span class="topic-dir">PUB</span>
+      <span class="topic-name">/gray_image</span>
+      <span class="topic-type">sensor_msgs/msg/Image — preprocessed mono8 debug view</span>
+    </div>
+  </div>
+
+  <div class="grid-2">
+
+    <!-- Obstacle Detection -->
+    <div class="card">
+      <h2>Obstacle Detection</h2>
+      <p>Detection runs in the image callback at camera frame rate using OpenCV:</p>
+      <ul>
+        <li>Convert BGR frame to grayscale</li>
+        <li>Threshold: pixels below 50 count as "dark"</li>
+        <li>If dark pixel count exceeds 10,000 the obstacle flag is set</li>
+        <li>Processed grayscale image is re-published to <code>/gray_image</code></li>
+      </ul>
+      <p style="margin-top: 12px;">The threshold approach is intentionally simple: static obstacles in the simulation appear as large dark regions against the bright water surface, making pixel counting sufficient.</p>
+    </div>
+
+    <!-- USV Model -->
+    <div class="card">
+      <h2>USV Model (SDF)</h2>
+      <p>The boat is assembled from multiple links in a single SDF model:</p>
+      <ul>
+        <li>Base hull (1.0 m x 0.5 m) with mass 5 kg</li>
+        <li>Left and right side walls (structural)</li>
+        <li>Two thruster plugins (differential drive)</li>
+        <li>Front-facing camera sensor</li>
+        <li>Graded buoyancy: water density 1000 kg/m3 above surface depth 0</li>
+        <li>Hydrodynamics plugin for damping forces</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- FSM Evolution -->
+  <div class="card">
+    <h2>Controller Design: Three Iterations</h2>
+    <p>The obstacle avoidance logic was refactored twice, progressively reducing coupling and improving maintainability:</p>
+
+    <div class="version-row">
+      <div>
+        <span class="version-badge">v1</span>
+        <code>obs_avoid_1.py</code>
+      </div>
+      <div class="version-text">
+        <strong>8-state hardcoded FSM.</strong> Each state (AVOID_LEFT1, AVOID_FWD1, ... AVOID_LEFT2) is an explicit branch in the control loop. Thrust values and durations are plain instance variables. The logic is self-contained but difficult to modify.
+      </div>
+    </div>
+
+    <div class="version-row">
+      <div>
+        <span class="version-badge">v2</span>
+        <code>obs_avoid_2.py</code>
+      </div>
+      <div class="version-text">
+        <strong>Same 8-state FSM, cleaner structure.</strong> Constants extracted to class-level attributes. Repeated thrust calls replaced with <code>_drive_forward()</code>, <code>_turn_left()</code>, <code>_turn_right()</code> helpers. State transitions centralised in <code>_transition()</code>.
+      </div>
+    </div>
+
+    <div class="version-row">
+      <div>
+        <span class="version-badge">v3</span>
+        <code>obs_avoid_3.py</code>
+      </div>
+      <div class="version-text">
+        <strong>Data-driven, 2-state design (final).</strong> The eight avoidance steps are encoded as a list of <code>(action, duration)</code> tuples. The FSM has only two states — <code>NAVIGATING</code> and <code>AVOIDING</code> — and a step index walks the sequence. Adding or reordering maneuvers requires only editing the list.
+      </div>
+    </div>
+  </div>
+
+  <!-- Avoidance Sequence -->
+  <div class="card">
+    <h2>Avoidance Sequence (v3)</h2>
+    <p>When an obstacle is detected, the USV executes a fixed S-curve bypass maneuver and returns to the original heading:</p>
+
+    <div style="margin-top: 12px;">
+      <div class="seq-step">
+        <div class="step-num">1</div>
+        <div class="step-action">Turn Left</div>
+        <div class="step-dur">3.0 s — swing away from the obstacle</div>
+      </div>
+      <div class="seq-step">
+        <div class="step-num">2</div>
+        <div class="step-action">Forward</div>
+        <div class="step-dur">7.0 s — clear the obstacle laterally</div>
+      </div>
+      <div class="seq-step">
+        <div class="step-num">3</div>
+        <div class="step-action">Turn Right</div>
+        <div class="step-dur">3.0 s — realign parallel to original track</div>
+      </div>
+      <div class="seq-step">
+        <div class="step-num">4</div>
+        <div class="step-action">Forward</div>
+        <div class="step-dur">4.0 s — pass alongside the obstacle</div>
+      </div>
+      <div class="seq-step">
+        <div class="step-num">5</div>
+        <div class="step-action">Turn Right</div>
+        <div class="step-dur">3.0 s — angle back toward original track</div>
+      </div>
+      <div class="seq-step">
+        <div class="step-num">6</div>
+        <div class="step-action">Forward</div>
+        <div class="step-dur">7.0 s — travel back to original lane</div>
+      </div>
+      <div class="seq-step">
+        <div class="step-num">7</div>
+        <div class="step-action">Turn Left</div>
+        <div class="step-dur">3.0 s — restore original heading</div>
+      </div>
+    </div>
+
+    <p style="margin-top: 14px;">After step 7 the FSM returns to <code>NAVIGATING</code> and the USV resumes forward motion.</p>
+  </div>
+
+  <!-- Quick Start -->
+  <div class="card">
+    <h2>Quick Start</h2>
+    <pre><code><span class="comment"># 1. Clone and build</span>
+mkdir -p ~/omp_tp/src
+cd ~/omp_tp/src
+git clone https://github.com/seungjae99/omp_tp.git
+cd ~/omp_tp && colcon build
+source install/setup.bash
+
+<span class="comment"># 2. Launch the Gazebo world (run from tp_worlds/)</span>
+cd ~/omp_tp/src/omp_tp/tp_worlds
+ign gazebo tp_world.sdf
+
+<span class="comment"># 3. Play the simulation, then in a new terminal:</span>
+ros2 launch omp_tp omp_tp.launch.py</code></pre>
+    <p style="margin-top: 14px;">The launch file starts RViz2, the obstacle avoidance node (<code>obs_avoid_3</code>), and the <code>ros_gz_bridge</code> in a single command.</p>
+  </div>
+
+  <!-- Dependencies -->
+  <div class="card">
+    <h2>Dependencies</h2>
+    <div class="grid-2">
+      <ul>
+        <li>ROS 2 Humble</li>
+        <li>Ignition Gazebo (Fortress)</li>
+        <li>ros_gz_bridge</li>
+        <li>rclpy</li>
+      </ul>
+      <ul>
+        <li>sensor_msgs / std_msgs</li>
+        <li>cv_bridge</li>
+        <li>OpenCV (cv2)</li>
+        <li>rviz2</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>
+    <p>
+      Source: <a href="https://github.com/seungjae99/omp_tp" target="_blank">github.com/seungjae99/omp_tp</a>
+      &nbsp;|&nbsp;
+      Maintained by seungjae99
+    </p>
+  </footer>
+
+</div>
+</body>
+</html>

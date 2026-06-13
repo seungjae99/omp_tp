@@ -1,0 +1,4 @@
+{
+  "desc": "USV simulation in Ignition Gazebo with ROS 2 camera-based obstacle avoidance using an FSM",
+  "tags": ["ROS 2", "Ignition Gazebo"]
+}
